@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # Drive2Win — Final Project
 
 Train a neural network to drive the simulation's standard bot autonomously, then race it against your classmates' bots in a live tournament.
@@ -7,7 +7,7 @@ This is your only project from Week 10 to the end of the course. There are no se
 
 > Week 9's behavioral-cloning lab was a tutorial. **This project is from scratch** — your data, your network, your iteration loop, your grade.
 
----
+
 
 ## How you are graded
 
@@ -35,7 +35,7 @@ A single number: how many checkpoints your bot passes in the tournament rounds (
 | 2nd | **+5%** |
 | 3rd | **+2%** |
 
----
+
 
 ## The tournament
 
@@ -52,7 +52,7 @@ Why this format matters for *how you train*:
 - Two rounds have obstacles. If you skipped recording obstacle-driving data, your bot will not pass those rounds. Plan for it.
 - Five minutes is long. Stuck-against-a-wall is a 5-minute-long mistake. Recovery driving in your dataset matters more than smoothness.
 
----
+
 
 ## The unifying metric — `benchmark.py`
 
@@ -237,6 +237,9 @@ git commit -m "v1-bc: baseline behavioral cloning"
 ```
 
 Open `scripts/02_train.py`, find the `my_backward()` TODO, and start.
-=======
+
 # FINAL-PROJECT---MACHINE-LEARNING
->>>>>>> 6a499740d4d2e72abd23dc9b29120a339e615e88
+ 6a499740d4d2e72abd23dc9b29120a339e615e88
+
+
+ c79c7e099c26fe49746f6a0ed5af676312fc788c
