@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Drive2Win — Final Project
 
 Train a neural network to drive the simulation's standard bot autonomously, then race it against your classmates' bots in a live tournament.
@@ -236,3 +237,6 @@ git commit -m "v1-bc: baseline behavioral cloning"
 ```
 
 Open `scripts/02_train.py`, find the `my_backward()` TODO, and start.
+=======
+# FINAL-PROJECT---MACHINE-LEARNING
+>>>>>>> 6a499740d4d2e72abd23dc9b29120a339e615e88
