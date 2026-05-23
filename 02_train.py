@@ -130,10 +130,20 @@ def train(X, Y, epochs=300, lr=1e-3, batch_size=64, val_frac=0.1, seed=0):
     return best, train_losses, val_losses
 
 
+def load_datasets(paths):
+    states, actions = [], []
+    for path in paths:
+        d = np.load(path, allow_pickle=False)
+        states.append(d["states"])
+        actions.append(d["actions"])
+        print(f"loaded {path}: states={d['states'].shape} actions={d['actions'].shape}")
+    return np.concatenate(states, axis=0), np.concatenate(actions, axis=0)
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="data_v1.npz",
-                    help="Dataset file from 01_collect.py")
+    ap.add_argument("--data", nargs="+", default=["data_v1.npz"],
+                    help="One or more dataset files from 01_collect.py")
     ap.add_argument("--tag", default="v1",
                     help="Output suffix (nav_<tag>.npz, fig_*_<tag>.png)")
     ap.add_argument("--epochs", type=int, default=300)
@@ -141,8 +151,7 @@ def main():
     ap.add_argument("--batch", type=int, default=64)
     args = ap.parse_args()
 
-    d = np.load(args.data, allow_pickle=False)
-    states_raw, actions = d["states"], d["actions"]
+    states_raw, actions = load_datasets(args.data)
     print(f"raw states  : {states_raw.shape}")
     print(f"raw actions : {actions.shape}")
 

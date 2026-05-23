@@ -53,13 +53,21 @@ def main():
                     help="Map seed. Same seed across iterations keeps the "
                          "comparison clean; vary it once you want to test "
                          "generalisation across different terrains.")
+    ap.add_argument("--obstacles", choices=["on", "off"], default="on",
+                    help="Use off for early route-learning data, then on for "
+                         "obstacle-generalisation data.")
     args = ap.parse_args()
 
     client = GameClient(SERVER_URL, API_KEY)
+    config = {
+        "seed": args.seed,
+        "wind_enabled": False,
+        "obstacles_enabled": args.obstacles == "on",
+    }
     session = client.create_session(
         mode="time_trial",
         player_name=f"d2w_collector_{args.tag}",
-        config={"seed": args.seed, "wind_enabled": False},
+        config=config,
     )
     print("Open this URL in a NEW TAB and click into it so WASD reach the game:")
     print(" ", session.get("browser_url"))

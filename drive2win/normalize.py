@@ -17,7 +17,7 @@ SPD_MAX = 20.0      # speed clip (m/s)
 DIST_MAX = 100.0    # checkpoint-distance clip (m)
 RAY_MAX = 50.0      # raycast clip (m); matches RAYCAST_MAX_RANGE in SensorSystem.ts
 
-FEATURE_NAMES = [
+RAW_FEATURE_NAMES = [
     "speed",
     "heading_error",
     "checkpoint_distance",
@@ -31,8 +31,34 @@ FEATURE_NAMES = [
     "ray_7_-45",
     "ground_friction",
 ]
+FEATURE_NAMES = RAW_FEATURE_NAMES
+ENGINEERED_FEATURE_NAMES = [
+    "speed",
+    "heading_error",
+    "checkpoint_distance",
+    "ray_0_front",
+    "ray_1_+45",
+    "ray_2_+90",
+    "ray_3_+135",
+    "ray_4_back",
+    "ray_5_-135",
+    "ray_6_-90",
+    "ray_7_-45",
+    "ground_friction",
+    "sin_heading_error",
+    "cos_heading_error",
+    "abs_heading_error",
+    "front_obstacle_pressure",
+    "front_left_clearance",
+    "front_right_clearance",
+    "side_clearance_balance",
+    "min_front_clearance",
+    "distance_remaining",
+    "speed_heading_interaction",
+]
 ACTION_NAMES = ["throttle", "steering"]
-N_FEATURES = 12
+N_RAW_FEATURES = 12
+N_FEATURES = len(ENGINEERED_FEATURE_NAMES)
 N_ACTIONS = 2
 
 
@@ -40,19 +66,49 @@ def normalize_states(states_raw: np.ndarray) -> np.ndarray:
     """Map raw sensor readings into roughly [-1, 1].
 
     Args:
-        states_raw: shape (N, 12). Columns in FEATURE_NAMES order.
+        states_raw: shape (N, 12). Columns in RAW_FEATURE_NAMES order.
 
     Returns:
-        float32 array of the same shape, scaled to [-1, 1] (or [0, 1] for
-        ranges that are physically non-negative).
+        float32 array with engineered features. Raw ranges that are physically
+        non-negative stay in [0, 1]; signed steering-relevant signals use
+        roughly [-1, 1].
     """
-    s = np.asarray(states_raw, dtype=np.float32).copy()
-    s[:, 0] = np.clip(s[:, 0] / SPD_MAX, -1.0, 1.0)         # speed
-    s[:, 1] = np.clip(s[:, 1] / np.pi, -1.0, 1.0)           # heading_error
-    s[:, 2] = np.clip(s[:, 2] / DIST_MAX, 0.0, 1.0)         # ckpt distance
-    s[:, 3:11] = np.clip(s[:, 3:11] / RAY_MAX, 0.0, 1.0)    # 8 rays
-    # column 11 (friction) is already in [0, 1]
-    return s
+    raw = np.asarray(states_raw, dtype=np.float32)
+    if raw.ndim == 1:
+        raw = raw[None, :]
+
+    base = raw.copy()
+    base[:, 0] = np.clip(base[:, 0] / SPD_MAX, -1.0, 1.0)       # speed
+    base[:, 1] = np.clip(base[:, 1] / np.pi, -1.0, 1.0)         # heading_error
+    base[:, 2] = np.clip(base[:, 2] / DIST_MAX, 0.0, 1.0)       # ckpt distance
+    base[:, 3:11] = np.clip(base[:, 3:11] / RAY_MAX, 0.0, 1.0)  # 8 rays
+    base[:, 11] = np.clip(base[:, 11], 0.0, 1.2) / 1.2          # friction
+
+    heading = raw[:, 1]
+    rays = base[:, 3:11]
+    front = rays[:, 0]
+    front_left = rays[:, 1]
+    front_right = rays[:, 7]
+    left = rays[:, 2]
+    right = rays[:, 6]
+    min_front = np.minimum.reduce([front_left, front, front_right])
+
+    engineered = np.column_stack(
+        [
+            base,
+            np.sin(heading),
+            np.cos(heading),
+            np.abs(base[:, 1]),
+            1.0 - front,
+            front_left,
+            front_right,
+            np.clip((left + front_left - right - front_right) * 0.5, -1.0, 1.0),
+            min_front,
+            1.0 - base[:, 2],
+            base[:, 0] * base[:, 1],
+        ]
+    )
+    return engineered.astype(np.float32)
 
 
 def sensors_to_input(sensors: dict) -> np.ndarray:
