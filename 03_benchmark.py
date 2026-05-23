@@ -35,6 +35,8 @@ def main():
     ap.add_argument("--seeds", type=int, nargs="+", default=[42],
                     help="Map seed(s) to test on. Use one for fast iteration; "
                          "use several to test generalisation across terrains.")
+    ap.add_argument("--obstacles", choices=["on", "off"], default="on",
+                    help="Benchmark with obstacles on or off.")
     ap.add_argument("--runs", type=int, default=5)
     ap.add_argument("--duration", type=float, default=60.0)
     ap.add_argument("--data", default=None,
@@ -51,6 +53,7 @@ def main():
         result = run_benchmark(
             weights=weights, runs=args.runs, seed=seed,
             duration=args.duration, module=args.module,
+            obstacles=args.obstacles == "on",
         )
         all_results.append({"seed": seed, **result})
 
@@ -70,6 +73,7 @@ def main():
     log_path = out_dir / f"{args.tag}.json"
     log = {
         "tag": args.tag, "weights": weights, "module": args.module,
+        "obstacles": args.obstacles,
         "runs_per_seed": args.runs, "duration_s": args.duration,
         "seeds": [
             {"seed": r["seed"], "summary": r["summary"], "runs": r["runs"]}

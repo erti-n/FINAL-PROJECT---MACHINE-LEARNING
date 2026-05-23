@@ -65,6 +65,7 @@ def make_module_policy(module_path: str, weights_path: str):
 
 def run_benchmark(weights: str, runs: int = DEFAULT_RUNS, seed: int = DEFAULT_SEED,
                   duration: float = DEFAULT_DURATION, module: str | None = None,
+                  obstacles: bool = True,
                   server_url: str = "https://ml.ferit.tech", api_key: str = "None",
                   player_name: str = "benchmark") -> dict:
     """Run `runs` benchmark laps and return aggregate metrics.
@@ -84,7 +85,11 @@ def run_benchmark(weights: str, runs: int = DEFAULT_RUNS, seed: int = DEFAULT_SE
             session = client.create_session(
                 mode="time_trial",
                 player_name=f"{player_name}_run{i+1}",
-                config={"seed": seed, "wind_enabled": False},
+                config={
+                    "seed": seed,
+                    "wind_enabled": False,
+                    "obstacles_enabled": obstacles,
+                },
             )
             client.connect_ws()
             time.sleep(0.6)
@@ -102,7 +107,7 @@ def run_benchmark(weights: str, runs: int = DEFAULT_RUNS, seed: int = DEFAULT_SE
 
     summary = score_runs(runs_out, TARGET_CHECKPOINTS)
     return {"summary": summary, "runs": runs_out, "config": {
-        "weights": weights, "module": module, "seed": seed,
+        "weights": weights, "module": module, "seed": seed, "obstacles": obstacles,
         "runs": runs, "duration": duration,
     }}
 
@@ -112,6 +117,7 @@ def main():
     ap.add_argument("--weights", required=True, help="Path to .npz / .pt weights file")
     ap.add_argument("--module", default=None,
                     help="Optional module path with `make_policy(weights_path)`")
+    ap.add_argument("--obstacles", choices=["on", "off"], default="on")
     ap.add_argument("--runs", type=int, default=DEFAULT_RUNS)
     ap.add_argument("--seed", type=int, default=DEFAULT_SEED)
     ap.add_argument("--duration", type=float, default=DEFAULT_DURATION)
@@ -131,6 +137,7 @@ def main():
         seed=args.seed,
         duration=args.duration,
         module=args.module,
+        obstacles=args.obstacles == "on",
         server_url=args.server,
         api_key=args.api_key,
     )
