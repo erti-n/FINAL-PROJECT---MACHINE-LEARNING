@@ -73,15 +73,17 @@ def run_benchmark(weights: str, runs: int = DEFAULT_RUNS, seed: int = DEFAULT_SE
     The seed is sent to the server so terrain/checkpoint layout is
     reproducible across students (so long as the server honors it).
     """
-    if module:
-        policy = make_module_policy(module, weights)
-    else:
-        policy = make_mlp_policy(weights)
-
     client = GameClient(server_url, api_key)
     runs_out = []
     try:
         for i in range(runs):
+            # Recreate the policy each run so stateful custom agents reset
+            # their recovery timers and start-boost logic.
+            if module:
+                policy = make_module_policy(module, weights)
+            else:
+                policy = make_mlp_policy(weights)
+
             session = client.create_session(
                 mode="time_trial",
                 player_name=f"{player_name}_run{i+1}",
